@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Project Showcase</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden; /* Prevent scrolling with the canvas animation */
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            z-index: 0; /* Place behind the content */
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 1; /* Place above the canvas */
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subheading {
+            font-size: 1.5rem;
+            color: #ddd;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            border-top: 2px solid rgba(255, 255, 255, 0.5);
+            padding-top: 1rem;
+            max-width: 80%;
+        }
+
+        .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem; /* Increased spacing for better visuals */
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 1rem 2.5rem; /* Bigger padding for a bold look */
+    font-size: 1.3rem; /* Slightly larger font size */
+    font-weight: 600; /* Make text bold */
+    border: none;
+    border-radius: 50px; /* Rounded pill shape */
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px; /* Consistent width for all buttons */
+    transition: all 0.4s ease; /* Smooth transition for hover effects */
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    position: relative; /* For hover effects */
+    overflow: hidden; /* For gradient animations */
+}
+
+.btn i {
+    margin-right: 10px;
+    font-size: 1.5rem; /* Icons slightly larger */
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: left 0.4s ease;
+}
+
+.btn:hover::before {
+    left: 0; /* Creates a shimmering effect */
+}
+
+.btn:hover {
+    transform: translateY(-5px); /* Lift-up effect on hover */
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3); /* Deepened shadow */
+}
+
+/* Individual button styles */
+.btn-signup {
+    background: linear-gradient(135deg, #42e695, #3bb2b8);
+}
+
+.btn-signup:hover {
+    background: linear-gradient(135deg, #3bb2b8, #42e695);
+}
+
+.btn-login {
+    background: linear-gradient(135deg, #1d9bf0, #1976d2);
+}
+
+.btn-login:hover {
+    background: linear-gradient(135deg, #1976d2, #1d9bf0);
+}
+
+.btn-google {
+    background: linear-gradient(135deg, #ea4335, #d93025);
+}
+
+.btn-google:hover {
+    background: linear-gradient(135deg, #d93025, #ea4335);
+}
+
+.btn-github {
+    background: linear-gradient(135deg, #333333, #555555);
+}
+
+.btn-github:hover {
+    background: linear-gradient(135deg, #555555, #333333);
+}
+
+.btn-twitter {
+    background: linear-gradient(135deg, #1da1f2, #0d8ceb);
+}
+
+.btn-twitter:hover {
+    background: linear-gradient(135deg, #0d8ceb, #1da1f2);
+}
+
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subheading {
+                font-size: 1.2rem;
+            }
+
+            .btn {
+                min-width: 150px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="test"></canvas> <!-- Canvas for animation -->
+    <div class="container">
+        <h1>Welcome to My Todo App</h1>
+        <p class="subheading">Discover amazing projects and connect with me. Join my community today!</p>
+        <div class="buttons">
+            <a href="signup.html" class="btn btn-signup"><i class="fas fa-user-plus"></i> Sign Up</a>
+            <a href="login.html" class="btn btn-login"><i class="fas fa-sign-in-alt"></i> Log In</a>
+            <button id="google-signin" class="btn btn-google"><i class="fab fa-google"></i> Sign in with Google</button>
+            <button id="github-signin" class="btn btn-github"><i class="fab fa-github"></i> Sign in with GitHub</button>
+            <button id="twitter-signin" class="btn btn-twitter"><i class="fab fa-twitter"></i> Sign in with Twitter</button>
+        </div>
+    </div>
+
+    <script>
+var w = window.innerWidth,
+    h = window.innerHeight,
+    canvas = document.getElementById('test'),
+    ctx = canvas.getContext('2d'),
+    rate = 60,
+    arc = 100,
+    time,
+    count,
+    size = 7,
+    speed = 20,
+    parts = new Array,
+    colors = ['red','#f57900','yellow','#ce5c00','#5c3566'];
+var mouse = { x: 0, y: 0 };
+
+canvas.setAttribute('width',w);
+canvas.setAttribute('height',h);
+
+function create() {
+  time = 0;
+  count = 0;
+
+  for(var i = 0; i < arc; i++) {
+    parts[i] = {
+      x: Math.ceil(Math.random() * w),
+      y: Math.ceil(Math.random() * h),
+      toX: Math.random() * 5 - 1,
+      toY: Math.random() * 2 - 1,
+      c: colors[Math.floor(Math.random()*colors.length)],
+      size: Math.random() * size
+    }
+  }
+}
+function particles() {
+    ctx.clearRect(0, 0, w, h);
+    canvas.addEventListener('mousemove', MouseMove, false);
+
+    for (let i = 0; i < arc; i++) {
+        let li = parts[i];
+        let distance = DistanceBetween(mouse, li); // Calculate distance from the mouse to the particle
+
+        // Check if the mouse is near the particle
+        if (distance < 50) { 
+            li.currentSize = li.size * 2; // Double the size when near
+        } else {
+            li.currentSize = li.size; // Reset to original size when far
+        }
+
+        ctx.beginPath();
+        ctx.arc(li.x, li.y, li.currentSize, 0, Math.PI * 2, false);
+        ctx.fillStyle = li.c;
+        ctx.fill();
+
+        li.x += li.toX * (time * 0.05);
+        li.y += li.toY * (time * 0.05);
+
+        // Handle wrapping around the screen edges
+        if (li.x > w) li.x = 0;
+        if (li.y > h) li.y = 0;
+        if (li.x < 0) li.x = w;
+        if (li.y < 0) li.y = h;
+    }
+
+    if (time < speed) {
+        time++;
+    }
+    setTimeout(particles, 1000 / rate);
+}
+
+// Initialize particle sizes with an additional "currentSize" property
+function create() {
+    time = 0;
+    count = 0;
+
+    for (let i = 0; i < arc; i++) {
+        parts[i] = {
+            x: Math.ceil(Math.random() * w),
+            y: Math.ceil(Math.random() * h),
+            toX: Math.random() * 5 - 1,
+            toY: Math.random() * 2 - 1,
+            c: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() * size, // Original size
+            currentSize: Math.random() * size, // Current size for animation
+        };
+    }
+}
+
+// Mouse position tracking
+function MouseMove(e) {
+    mouse.x = e.layerX;
+    mouse.y = e.layerY;
+}
+
+function DistanceBetween(p1, p2) {
+    let dx = p2.x - p1.x;
+    let dy = p2.y - p1.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Run the initialization
+create();
+particles();
+
+    </script>
+</body>
+</html>

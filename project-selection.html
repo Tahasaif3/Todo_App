@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Showcase</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #ffffff;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        #user-info {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        #signout-btn {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        #signout-btn:hover {
+            background-color: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .project-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .project-content {
+            padding: 20px;
+        }
+
+        .project-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+
+        .project-link {
+            display: inline-block;
+            background-color: #2ecc71;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .project-link:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .popup h2 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        .popup-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .popup-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .popup-button.cancel {
+            background-color: #e74c3c;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .popup-button.confirm {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .popup-button:hover {
+            opacity: 0.8;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div id="user-info">
+                <h2>Welcome, <span id="user-name"></span></h2>
+            </div>
+            <button id="signout-btn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+        </header>
+        <h1>Project Showcase</h1>
+        <div class="grid" id="project-grid"></div>
+    </div>
+
+    <div class="popup" id="signout-popup">
+        <h2>Confirm Sign Out</h2>
+        <p>Are you sure you want to sign out?</p>
+        <div class="popup-buttons">
+            <button class="popup-button cancel" id="cancel-signout">Cancel</button>
+            <button class="popup-button confirm" id="confirm-signout">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXKwTmQHRdopHmdPV56Uypxt3yy-vm4Ls",
+            authDomain: "auth-js-c349b.firebaseapp.com",
+            databaseURL:"https://auth-js-c349b-default-rtdb.firebaseio.com",
+            projectId: "auth-js-c349b",
+            storageBucket: "auth-js-c349b.appspot.com",
+            messagingSenderId: "8525102033",
+            appId: "1:8525102033:web:19c8b591e44c8213ee7ef0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        const userNameElement = document.getElementById('user-name');
+        const signoutBtn = document.getElementById('signout-btn');
+        const projectGrid = document.getElementById('project-grid');
+        const signoutPopup = document.getElementById('signout-popup');
+        const overlay = document.getElementById('overlay');
+        const cancelSignout = document.getElementById('cancel-signout');
+        const confirmSignout = document.getElementById('confirm-signout');
+
+        const projects = [
+            { name: "Todo App", path: "todo.html", image: "/images/todo-app.jpg?height=200&width=250" },
+            { name: "Image Gallery", path: "https://image-gallery-using-js.vercel.app/", image: "/images/image-gallery.jpg?height=200&width=250" },
+            { name: "Form Validation", path: "https://form-validation-using-js-gamma.vercel.app/", image: "/images/form-validation.jpg?height=200&width=250" },
+            { name: "Text Editor", path: "https://text-editor-using-js.vercel.app/", image: "/images/text-editor.jpg?height=200&width=250" },
+            { name: "Travel Agency Website", path: "https://travel-agency-website-flax.vercel.app/", image: "/images/travel-agency-website.jpg?height=200&width=250" },
+            { name: "My Portfolio", path: "https://personal-portfolio-assignment.vercel.app/", image: "/images/personal-portfolio.jpg?height=200&width=250" },
+            { name: "Stopwatch Web Application", path: "https://stopwatch-web-application-six.vercel.app/", image: "/images/stopwatch.jpg?height=200&width=250" },
+            { name: "TicTacToe Web Application", path: "https://tic-tac-toe-web-application-chi.vercel.app/", image: "/images/tictactie.jpg?height=200&width=250" },
+            { name: "Responsive Landing Page", path: "https://responsive-landing-page-green.vercel.app/", image: "/images/responsive-landing-page.jpg?height=200&width=250" },
+            { name: "Resume Builder Web Application", path:"https://milestone-5-shareable-resume-builder-by-taha.vercel.app/", image: "/images/resume.jpg?height=200&width=250" },
+            { name: "Countdown Timer App", path: "https://count-down-timer-iota-self.vercel.app/", image: "/images/countdown-timer.jpg?height=200&width=250" },
+            { name: "Weather Application", path: "https://weather-widget-app-three.vercel.app/", image: "/images/weather-app.jpg?height=200&width=250" },
+            { name: "Birthday Wishes App", path: "https://birthday-wishes-app-3d-ti69.vercel.app/", image: "/images/birthday-wishes-app.jpg?height=200&width=250" },
+            { name: "Number Guessing Game", path: "https://number-guessing-game-6a7v.vercel.app/", image: "/images/number-game.jpg?height=200&width=250" },
+            { name: "Calculator Web App", path: "https://simple-calculator-app-mocha.vercel.app/", image: "/images/simple-calculator.jpg?height=200&width=250" },
+            { name: "Random Jokes Generator App", path:"https://random-jokes-generator-app-b8qx.vercel.app/", image: "/images/jokes-app.jpg?height=200&width=250" },
+            { name: "Tip Calculator App", path: "https://tip-calculator-app-jade-pi.vercel.app/", image: "/images/tip-calculator.jpg?height=200&width=250" },
+            { name: "Password Generator App", path: "https://password-generator-app-k3w8.vercel.app/", image: "/images/password-generator-app.jpg?height=200&width=250" },
+            { name: "Unit Converter App", path: "https://unit-converter-apps--theta.vercel.app/", image: "/images/unit-converter-app.jpg?height=200&width=250" },
+            { name: "BMI Calculator App", path: "https://bmi-calculator-app-uowi.vercel.app/", image: "/images/bmi-calculator.jpg?height=200&width=250" },
+        ];
+
+        function createProjectCards() {
+            projects.forEach((project) => {
+                const card = document.createElement('div');
+                card.className = 'project-card';
+
+                const image = document.createElement('img');
+                image.src = project.image;
+                image.alt = project.name;
+                image.className = 'project-image';
+
+                const content = document.createElement('div');
+                content.className = 'project-content';
+                content.innerHTML = `
+                    <h3 class="project-title">${project.name}</h3>
+                    <a href="${project.path}" class="project-link" target="_blank">View Project</a>
+                `;
+
+                card.appendChild(image);
+                card.appendChild(content);
+                projectGrid.appendChild(card);
+            });
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const userRef = ref(database, `users/${user.uid}`);
+                onValue(userRef, (snapshot) => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        userNameElement.textContent = userData.name || 'User';
+                    }
+                });
+                createProjectCards();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        signoutBtn.addEventListener('click', () => {
+            signoutPopup.style.display = 'block';
+            overlay.style.display = 'block';
+        });
+
+        cancelSignout.addEventListener('click', () => {
+            signoutPopup.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
+        confirmSignout.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error("Sign out error:", error.message);
+                alert("Sign out error: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
